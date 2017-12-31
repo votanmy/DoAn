@@ -79,7 +79,7 @@ global if_weight if_norm if_dist files
 addpath('AKM');
 run('vlfeat\toolbox\vl_setup.m');
 datasetDir = 'oxford\images\';
-num_words = 1000;
+num_words = 1000000;
 num_iterations = 5;
 num_trees = 8;
 %dim = 128;

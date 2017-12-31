@@ -73,7 +73,7 @@ if ~isempty(h)
     drawnow;
     
     axes(handles.axes1);
-    fid = fopen('oxford\groundtruth\rank_list.txt', 'w');    
+    %fid = fopen('oxford\groundtruth\rank_list.txt', 'w');    
     for i=1:size(ids{1},2)
         % Show only 10 highest score images
         if i<=10            
@@ -81,9 +81,9 @@ if ~isempty(h)
             imshow(imread(fullfile('oxford\images\', files(ids{1}(i)).name)));
             title(files(ids{1}(i)).name,'Interpreter','none');
         end
-        fprintf(fid, '%s\n', files(ids{1}(i)).name(1:end-4));
+        %fprintf(fid, '%s\n', files(ids{1}(i)).name(1:end-4));
     end
-    fclose(fid);
+    %fclose(fid);
     
 end
 

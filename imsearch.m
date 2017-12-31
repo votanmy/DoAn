@@ -252,13 +252,8 @@ for k=1:length(q_files)
     str = fgetl(fid);
     [image_name, remain] = strtok(str, ' ');
     fclose(fid);
-%   numbers = str2num(remain);
+    numbers = str2num(remain);
     if strcmp( slectedImg, image_name(6:end) )
-%         x1 = numbers(1);
-%         y1 = numbers(2);
-%         x2 = numbers(3);
-%         y2 = numbers(4);
-        file = strcat('oxford\images\', image_name(6:end), '.jpg');
         
         if exist('cropim.jpg', 'file')
             Icr = imread('cropim.jpg');
@@ -267,37 +262,66 @@ for k=1:length(q_files)
             else
                 I = im2single(Icr);
             end
+            
+            %imgIF = imfinfo(Icr);
+            [imgW,imgH] = size(I);
+            x1 = 0;
+            y1 = 0;
+            x2 = imgW;
+            y2 = imgH;
+            
             imtitle = strcat(slectedImg, ' Cropped');
             % compute rootSIFT features
-            [~, sift] = vl_covdet(I, 'method', 'Hessian', 'estimateAffineShape', true); 
+            [frame, sift] = vl_covdet(I, 'method', 'Hessian', 'estimateAffineShape', true); 
+            sift = sift(:,(frame(1,:)<=x2) &  (frame(1,:) >= x1) & (frame(2,:) <= y2) & (frame(2,:) >= y1));
             
             % Test on an image
             %global files dict_words dict inv_file if_weight if_norm if_dist
             q_words = cell(1,1);
             q_words{1} = ccvBowGetWords(dict_words, double(sift), [], dict);
             [ids dists] = ccvInvFileSearch(inv_file, q_words(1), if_weight, if_norm, if_dist, ntop);
+            
+            fid = fopen('oxford\groundtruth\rank_list_cropped.txt', 'w');
+            for i=1:size(ids{1},2)
+                % Build the rank list for the cropped image
+                fprintf(fid, '%s\n', files(ids{1}(i)).name(1:end-4));
+            end
+            fclose(fid);
 
             script = ['oxford\groundtruth\Test.exe oxford\groundtruth\', ...
                 q_files(k).name(1:end-10), ...
-                ' oxford\groundtruth\rank_list.txt',...
-                ' >oxford\result\', image_name(6:end), '_crop_result.txt']; %q_files(k).name(1:end-10)
+                ' oxford\groundtruth\rank_list_cropped.txt',...
+                ' >oxford\cropped_result\', image_name(6:end), '_crop_result.txt']; %q_files(k).name(1:end-10)
             system(script);
             
-            result_file = fopen(strcat('oxford\result\', image_name(6:end), '_crop_result.txt'),'r');
+            result_file = fopen(strcat('oxford\cropped_result\', image_name(6:end), '_crop_result.txt'),'r');
         
-        else            
+        else 
+            x1 = numbers(1);
+            y1 = numbers(2);
+            x2 = numbers(3);
+            y2 = numbers(4);
+            file = strcat('oxford\images\', image_name(6:end), '.jpg');  
+            
             I = im2single(rgb2gray(imread(file)));
             imtitle = image_name(6:end);
             % compute rootSIFT features
-            [~, sift] = vl_covdet(I, 'method', 'Hessian', 'estimateAffineShape', true);
-            %[frame, sift] = vl_covdet(I, 'method', 'Hessian', 'estimateAffineShape', true);
-            %sift = sift(:,(frame(1,:)<=x2) &  (frame(1,:) >= x1) & (frame(2,:) <= y2) & (frame(2,:) >= y1));
+            %[~, sift] = vl_covdet(I, 'method', 'Hessian', 'estimateAffineShape', true);
+            [frame, sift] = vl_covdet(I, 'method', 'Hessian', 'estimateAffineShape', true);
+            sift = sift(:,(frame(1,:)<=x2) &  (frame(1,:) >= x1) & (frame(2,:) <= y2) & (frame(2,:) >= y1));
             
             % Test on an image
             %global files dict_words dict inv_file if_weight if_norm if_dist
             q_words = cell(1,1);
             q_words{1} = ccvBowGetWords(dict_words, double(sift), [], dict);
             [ids dists] = ccvInvFileSearch(inv_file, q_words(1), if_weight, if_norm, if_dist, ntop);
+            
+            fid = fopen('oxford\groundtruth\rank_list.txt', 'w');
+            for i=1:size(ids{1},2)
+                % Build the rank list slected image
+                fprintf(fid, '%s\n', files(ids{1}(i)).name(1:end-4));
+            end
+            fclose(fid);            
 
             script = ['oxford\groundtruth\Test.exe oxford\groundtruth\', ...
                 q_files(k).name(1:end-10), ...
